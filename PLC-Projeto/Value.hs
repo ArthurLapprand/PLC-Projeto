@@ -27,9 +27,8 @@ instance Show Value where
   show (String str) = "\"" ++ str ++ "\""
   show (Var name) = name
   show Nil = "undefined"
-  show (Function id [args] [comands] ) = "Func: " ++ id ++ (showArgs args)
+  show (Function (Id id) args commands) = "Func: " ++ id ++ (showArgs args)
   show (Return v) = show v
-  show (List b) = "[" ++ (showList (List b)) ++ "]"
   show GlobalVar = "Undefined variable"
   show (Double d) = show d
   
@@ -39,10 +38,6 @@ instance Show Value where
 -- single String where the words are separated by spaces.
 showArgs [] = ""
 showArgs (Id c :cs) = (show c) ++ ";" ++ showArgs cs
-
-showList [] = "";
-showList [b] = show b
-showList (List (b:bs)) = show b ++ "," showList bs
 
 showListContents :: [Value] -> String
 showListContents [] = ""

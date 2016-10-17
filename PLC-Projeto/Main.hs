@@ -35,8 +35,9 @@ evalExpr env (AssignExpr OpAssign (LValue var) expr) = do
     proc <-stateLookup env var -- crashes if the variable doesn't exist
     e <- evalExpr env expr
     if (proc == GlobalVar) then setGlobalVar var e else setVar var e
-evalExpr env (AssignExpr OpAssign (LBracker exp1 exp2) expr ) = do
-	case expr1 of
+
+evalExpr env (AssignExpr OpAssign (LBracket exp1 exp2) expr ) = do
+	case exp1 of
 		VarRef (Id id) -> do 
 			variable <- stateLookup env id
 			posDot <- evalExpr env exp2
@@ -46,12 +47,13 @@ evalExpr env (AssignExpr OpAssign (LBracker exp1 exp2) expr ) = do
 					newList <-createList (List []) (List l) pos e
 					setVar id newList
 				_ -> error $ "Not an List"
+
 evalExpr env (UnaryAssignExpr inc (LVar var)) = do
 	case inc of 
 		PrefixInc -> evalExpr env (AssignExpr OpAssign (LVar var) (InfixExpr OpAdd (VarRef (Id var)) (IntLit 1)))
 		PrefixDec -> evalExpr env (AssignExpr OpAssign (LVar var) (InfixExpr OpSub (VarRef (Id var)) (IntLit 1)))
 		PostfixInc -> evalExpr env (AssignExpr OpAssign (LVar var) (InfixExpr OpAdd (VarRef (Id var)) (IntLit 1)))
-        PostfixDec -> evalExpr env (AssignExpr OpAssign (LVar var) (InfixExpr OpSub (VarRef (Id var)) (IntLit 1)))
+		PostfixDec -> evalExpr env (AssignExpr OpAssign (LVar var) (InfixExpr OpSub (VarRef (Id var)) (IntLit 1)))
 
 evalExpr env (Fucnti)
 evalExpr env (BracketRef expr1 expr2) = do 
@@ -107,7 +109,7 @@ createList :: StateT ->[Expression] ->Value ->StateTransformer Value
 createList env [] (List l) = return $ List l
 createList env (x:xs) (List l) = do
 	evaluatedExpr <- evalExpr env x
-	createList env xs (List (l++[evaluatedExpr])
+	createList env xs (List (l++[evaluatedExpr]))
 
 findElementAt :: StateT -> Value -> Value -> StateTransformer Value
 findElementAt env (List []) (Int n) = return $ Nil
@@ -124,9 +126,9 @@ evalStmt env (VarDeclStmt (decl:ds)) =
 evalStmt env (ExprStmt expr) = evalExpr env expr
 evalStmt env (IfStmt exp st1 st2) = do
 	e <- evalExpr env exp 
-    case e of 
-         Bool True -> evalStmt env st1
-         Bool False -> evalStmt env st2
+	case e of 
+		Bool True -> evalStmt env st1
+		Bool False -> evalStmt env st2
 
 evalStmt env (IfSingleStmt exp st1) = do
       e <- evalExpr env exp
@@ -135,7 +137,7 @@ evalStmt env (IfSingleStmt exp st1) = do
       	Bool False -> return Nil
 
 evalStmt env (ForStmt init test inc stmt) = do
-	case init of
+	case init of 
 		NoInit -> return Nil
 		VarInit vars -> varDeclList env vars
 		ExprInit expr -> evalExpr env expr
@@ -168,10 +170,10 @@ evalStmt env (WhileStmt exp stmt) = do
 	case evaluatedExpr of
 		Bool True -> do 
 			e <- evalStmt env stmt 
-			case e of do
+			case e of
 				Break b -> return Nil
-                Return r -> return (Return r)
-			    _ -> evalStmt(WhileStmt exp stmt)
+                Return r -> return (Return r) 
+                _ -> evalStmt(WhileStmt exp stmt)
 		Bool False -> return Nil
 
 evalStmt env (DoWhileStmt stmt expr) = do
@@ -286,7 +288,6 @@ infixOp env OpNEq  (Bool v1) (Bool v2) = return $ Bool $ v1 /= v2
 infixOp env OpLAnd (Bool v1) (Bool v2) = return $ Bool $ v1 && v2
 infixOp env OpLOr  (Bool v1) (Bool v2) = return $ Bool $ v1 || v2
 infixOp env OpXor  (Bool v1) (Bool v2) = return $ Bool $ v1^v2
-infixOp env OpBor (Bool v1) (Bool v2 ) = return $ Bool $ v1 | v2
 infixOp env OpLShift (Int v1) (Int v2 ) = return $ Int $ shiftl v1 v2
 infixOp env OpSpRShift  (Int v1) (Int v2) = return $ Int $ shiftR v1 v2
 
@@ -323,15 +324,15 @@ concatOp env l (param:params) = do
 	case evaluatedParam of
 		(List l2) -> concatOp env (l++l2) params
 		v-> concatOp env (l++[v]) params
-equalsOp :: StateT ->[Value]->[Expression] ->StateTransformer Value
-equalsOp env l [] = return $Bool True
-equalsOp env (x:xs) (param:params) = do
+
+equalsOp :: StateT -> [Value] -> [Expression] -> StateTransformer Value
+equalsOp env l [] = return $ Bool True
+equalsOp env l (param:params) = do
 	evalParam <- evalExpr env param
 	case evalParam of
 		(List l2) -> do
-			if(compareList l l2)
-				then equalsOp env l params
-	
+			if (compareList l l2) then (equalsOp env l params) else return $ Bool False
+
 compareList :: [Value] -> [Value] -> Bool
 compareList [] [] = True
 compareList x [] = False
@@ -378,8 +379,8 @@ setGlobalAux var val (s:scopes) = if(scopes == [])
 setVarScopes :: String -> Value -> StateT -> StateT
 setVarScopes var val _ = error $ "Variavel nao existe"
 setVarScopes var val st = case (Map.lookup var (head st)) of
-                          Nothing -> (head st):(setVarScopes var val (tail st))
-						  Just v -> (insert var val (head st)):(tail st)
+                        Nothing -> (head st):(setVarScopes var val (tail st))
+						Just v -> (insert var val (head st)):(tail st)
 
 --ESCOPO- VARIAVEIS LOCAIS E GLOBAIS
 scopeLookup :: StateT -> String -> Maybe Value
@@ -395,8 +396,8 @@ popScope = ST $	\s -> (Nil,(tail s))
 --
 -- Types and boilerplate
 --
-type maping = Map String Value
-type StateT = [maping]
+
+type StateT = [Map String Value] 
 data StateTransformer t = ST (StateT -> (t, StateT))
 
 instance Monad StateTransformer where
