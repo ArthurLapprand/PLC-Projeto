@@ -21,16 +21,17 @@ data Value = Bool Bool
 --
 
 instance Show Value where 
-  show (Bool True) = "true"
-  show (Bool False) = "false"
+  show (Bool True) = "True"
+  show (Bool False) = "False"
   show (Int int) = show int
   show (String str) = "\"" ++ str ++ "\""
   show (Var name) = name
-  show Nil = "undefined"
-  show (Function (Id id) args commands) = "Func: " ++ id ++ (showArgs args)
+  show Nil = " Undefined"
+  show (Function (Id id) args commands) = " Func: " ++ id ++ (showArgs args)
   show (Return v) = show v
   show GlobalVar = "Undefined variable"
   show (Double d) = show d
+  show (List l) = showListContents l
   
   
 -- This function could be replaced by (unwords.map show). The unwords

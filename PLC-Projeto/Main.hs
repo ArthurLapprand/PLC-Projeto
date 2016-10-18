@@ -97,7 +97,7 @@ evalExpr env (CallExpr name params) = do
         _ -> do
             evaluedName <- evalExpr env name
             case evaluedName of
-                Function id args stmt -> do
+                (Function ids args stmt) -> do
                     pushScope
                     compareArgs env args params
                     ret <- evalStmt env (BlockStmt stmt)
@@ -232,10 +232,12 @@ evalStmt env (ReturnStmt expr) = do
 
    
 evalStmt env (BlockStmt []) = return Nil
-evalStmt env (BlockStmt (x:xs)) = do
-	--pushScope
-	evalBlock env (BlockStmt (x:xs))
-	--popScope
+evalStmt env (BlockStmt (x:xs)) = do 
+	evalStatement <- evalStmt env x
+	case evalStatement of 
+		Return r -> return (Return r)
+		Break b -> return (Break b)
+		_ -> evalStmt env (BlockStmt xs)
 
 evalStmt env (FunctionStmt (Id name) args stmts) = setLocalVar name (Function (Id name) args stmts)
 
@@ -251,10 +253,10 @@ compareCases env evaluatedExpr (c:cs) = do
 		CaseDefault stmts2 -> do
 			evalStmt env (BlockStmt stmts2)
 
-evalBlock :: StateT -> Statement -> StateTransformer Value
-evalBlock env (BlockStmt []) = return Nil
-evalBlock env (BlockStmt (x:xs)) = do
-	evalStmt env x >> evalBlock env (BlockStmt xs)
+--evalBlock :: StateT -> Statement -> StateTransformer Value
+--evalBlock env (BlockStmt []) = return Nil
+--evalBlock env (BlockStmt (x:xs)) = do
+	--evalStmt env x >> evalBlock env (BlockStmt xs)
 
 --FUNCTION RELATED STUFF
 
@@ -388,10 +390,10 @@ setGlobalAux var val (s:scopes) = if(scopes == [])
 									else s:(setGlobalAux var val scopes)
 
 setVarScopes :: String -> Value -> StateT -> StateT
-setVarScopes var val _ = error $ "Variavel nao existe"
 setVarScopes var val st = case (Map.lookup var (head st)) of
 	Nothing -> (head st):(setVarScopes var val (tail st))
 	Just v -> (insert var val (head st)):(tail st)
+setVarScopes var val _ = error $ "Variavel nao existe"
 
 --ESCOPO- VARIAVEIS LOCAIS E GLOBAIS
 scopeLookup :: StateT -> String -> Maybe Value
