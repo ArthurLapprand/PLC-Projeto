@@ -196,22 +196,16 @@ evalStmt env (WhileStmt exp stmt) = do
 	evaluatedExpr <- evalExpr env exp
 	case evaluatedExpr of
 		Bool True -> do 
-			e <- evalStmt env stmt 
-			case e of
-				Break b -> return Nil
-                Return r -> return (Return r) 
-                _ -> evalStmt env (WhileStmt exp stmt)
+			evalStmt env stmt 
+		 	evalStmt env (WhileStmt exp stmt)
 		Bool False -> return Nil
 
 evalStmt env (DoWhileStmt stmt expr) = do
-    evaluetedExpr <- evalExpr env expr
-    evaluetedStmt <- evalStmt env stmt
-    case evaluetedExpr of
+    evaluatedExpr <- evalExpr env expr
+    evaluatedStmt <- evalStmt env stmt
+    case evaluatedExpr of
         Bool True -> do
-            case evaluetedStmt of
-                Break b -> return Nil
-                Return r -> return (Return r)
-                _ -> evalStmt env (DoWhileStmt stmt expr)
+                evalStmt env (DoWhileStmt stmt expr)
         Bool False -> return Nil
 
 evalStmt env (SwitchStmt expr cases) = do 
