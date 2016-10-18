@@ -1,17 +1,16 @@
-x = "String";
-var y;
-switch(x) {
-	case "Nada":
-	y = 0;
-	break;
-	case "String":
-	y = 1;
-	break;
-	default:
-	y = 2;
-	break;
+function fatorial(x) {
+	if (x == 0) return 1;
+	return x * fatorial(x - 1);
 }
+y = fatorial(3);
 y;
+/*x = 3;
+var y = 1;
+while(x > 1) {
+	y = x * y;
+	x--;
+}
+y;*/
 /*
 function ola (x){
 	if(x[0] < -50){
