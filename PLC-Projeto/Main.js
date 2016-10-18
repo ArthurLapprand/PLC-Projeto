@@ -1,9 +1,11 @@
-/*function len(a, numero){
+function len(a, numero){
 	var z = [];
 	if(a.equals(z)){
 		return numero;
 	} else {
-		return len(a.tail, numero + 1);
+		var num1 = numero + 1;
+		var k = a.tail;
+		return len(k,num1);
 	}
 }
 /*function div (array ,starting,length){
@@ -49,20 +51,20 @@ function mergeSort (array) {
 	return merge(mergeSort(left),mergeSort(right));
 
 }*/
-
-x = [1,2,3];
-y = [2,3,4];
-z = [1,2,3];
-w = [1,2];
-
-x.equals(y);
-x.equals(z);
-x.equals(w);
-w.equals(x);
-
-//x = [1,54,3,6,76,3,4];
-//y = len(x, 0);
-
+function ola (x){
+	if(x[0] < -50){
+		return x[0];
+	}
+	var b = 50;
+	var y = [x[0] -b];
+	return ola(y);
+}
+a = [1,2,3];
+var y = len(a,0);
+//// = 0;
+//w = [1];
+//y = len(x,w);
+//ola([1]);
 /*var x = 0;
 while (true) {
 	if (x > 5) break;
