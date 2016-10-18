@@ -8,7 +8,7 @@ function len(a, numero){
 		return len(k,num1);
 	}
 }
-/*function div (array ,starting,length){
+function div (array,starting,length){
 	var temp = [];
 	for(var x = starting; x<length; x++){
 		temp = temp.concat(array[x]);
@@ -23,25 +23,29 @@ function merge (left, right){
 	while(x > 0 && y > 0){
 		if(left[countX] <= right[countY]){
 			res = res.concat(left[x]);
+			countX++;
 			x--;
 		}else{
 			res = res.concat(right[y]);
 			y--;
+			countY++;
 		}
 	}
 	while(x >0){
-		res = res.concat(left[x]);
+		res = res.concat(left[countX]);
+		countX++;
 		x--;
 	}
 	while(y>0){
-		res = res.concat(right[y]);
+		res = res.concat(right[countY]);
+		countY++;
 		y--;
 	}
 	return res;
 }
 
 function mergeSort (array) {
-	if(len(array,0) == 2){
+	if(len(array,0) == 1){
 		return array;
 	}
 	arrayLen = len(array,0);
@@ -49,8 +53,10 @@ function mergeSort (array) {
 	var left = div(array,0,meio);
 	var right = div(array,meio,arrayLen);
 	return merge(mergeSort(left),mergeSort(right));
+}
 
-}*/
+x = 13/2;
+/*
 function ola (x){
 	if(x[0] < -50){
 		return x[0];
@@ -59,8 +65,13 @@ function ola (x){
 	var y = [x[0] -b];
 	return ola(y);
 }
-a = [1,2,3];
-var y = len(a,0);
+*/
+x = 1; 
+res = [];
+b = [1,2,3];
+res = res.concat(b[x]);
+//mergeSort([1,3,5,2,3,6]);
+//merge([1,3,4],[2,5,6]);
 //// = 0;
 //w = [1];
 //y = len(x,w);

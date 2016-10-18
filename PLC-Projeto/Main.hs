@@ -100,7 +100,6 @@ evalExpr env (CallExpr name params) = do
                         "head" -> headOpExp env params
                         "tail" -> tailOpExp env params
                         "equals" -> equalsOp env l params
-                        "len" -> error "HUE"
             	
         _ -> do
             evaluedName <- evalExpr env name
@@ -336,7 +335,7 @@ headOpExp env (x:xs) = evalExpr env x
 tailOpExp :: StateT -> [Expression] -> StateTransformer Value
 tailOpExp env [] = return Nil
 tailOpExp env [x] = return (List [])
-tailOpExp env (x:xs) = evalExpr env (ListExpr xs)
+tailOpExp env (x:xs) = evalExpr env (ArrayLit xs)
 
 concatOp :: StateT -> [Value] -> [Expression] -> StateTransformer Value
 concatOp env l [] = return (List l)
