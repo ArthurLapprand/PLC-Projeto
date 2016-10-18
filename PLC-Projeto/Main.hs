@@ -215,7 +215,10 @@ evalStmt env (DoWhileStmt stmt expr) = do
     evaluatedStmt <- evalStmt env stmt
     case evaluatedExpr of
         Bool True -> do
-                evalStmt env (DoWhileStmt stmt expr)
+        	case evaluatedStmt of
+        		Break b -> return (Break b)
+        		Return r -> return(Return r)
+        		_ -> evalStmt env (DoWhileStmt stmt expr)
         Bool False -> return Nil
 
 evalStmt env (SwitchStmt expr cases) = do 
@@ -246,16 +249,19 @@ evalStmt env (BlockStmt (x:xs)) = do
 evalStmt env (FunctionStmt (Id name) args stmts) = setGlobalVar name (Function (Id name) args stmts)
 
 compareCases :: StateT -> Value -> [CaseClause] ->StateTransformer Value
-compareCases env evaluatedExpr _ = return Nil
 compareCases env evaluatedExpr (c:cs) = do 
 	case c of 
 		CaseClause exp stmts -> do 
 			evaluatedExpr2 <- evalExpr env exp
-			if(evaluatedExpr2 == evaluatedExpr) then
-				evalStmt env (BlockStmt stmts)
-			else compareCases env evaluatedExpr (c:cs)
+			if(evaluatedExpr2 == evaluatedExpr) then do 
+				e <- evalStmt env (BlockStmt stmts)
+				case e of 
+					Break b -> return (Break b)
+					_ -> compareCases env evaluatedExpr (c:cs)
+				else compareCases env evaluatedExpr (c:cs)
 		CaseDefault stmts2 -> do
 			evalStmt env (BlockStmt stmts2)
+compareCases env evaluatedExpr _ = return Nil
 
 --evalBlock :: StateT -> Statement -> StateTransformer Value
 --evalBlock env (BlockStmt []) = return Nil
@@ -293,6 +299,7 @@ infixOp env OpGT   (Int  v1) (Int  v2) = return $ Bool $ v1 > v2
 infixOp env OpGEq  (Int  v1) (Int  v2) = return $ Bool $ v1 >= v2
 infixOp env OpEq   (Int  v1) (Int  v2) = return $ Bool $ v1 == v2
 infixOp env OpEq   (Bool v1) (Bool v2) = return $ Bool $ v1 == v2
+infixOp env OpNEq  (Int  v1) (Int  v2) = return $ Bool $ v1 /= v2
 infixOp env OpNEq  (Bool v1) (Bool v2) = return $ Bool $ v1 /= v2
 infixOp env OpLAnd (Bool v1) (Bool v2) = return $ Bool $ v1 && v2
 infixOp env OpLOr  (Bool v1) (Bool v2) = return $ Bool $ v1 || v2
