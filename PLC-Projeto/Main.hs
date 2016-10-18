@@ -44,7 +44,7 @@ evalExpr env (AssignExpr OpAssign (LBracket exp1 exp2) expr ) = do
 			e <- evalExpr env expr
 			case variable of 
 				List l -> do
-					newList <- createList (List l) (List []) (posDot) (e)
+					newList <- createList (List []) (List l) (posDot) (e)
 					setVar id newList
 				_ -> error $ "Not a List"
 
@@ -88,6 +88,12 @@ evalExpr env (CallExpr name params) = do
         DotRef expr (Id id) -> do
             list <- evalExpr env expr
             case list of
+            	ArrayLit a -> do
+            		case id of
+            			"concat" -> concatOpExp env a params
+            			"head" -> headOpExp env params
+            			"tail" -> tailOpExp env params
+            			"equals" -> equalsOpExp env a params
                 List l -> do
                     case id of
                         "concat" -> concatOp env l params
@@ -195,10 +201,13 @@ evalStmt env (ForStmt init test inc stmt) = do
 evalStmt env (WhileStmt exp stmt) = do
 	evaluatedExpr <- evalExpr env exp
 	case evaluatedExpr of
-		Bool True -> do 
-			evalStmt env stmt 
-		 	evalStmt env (WhileStmt exp stmt)
 		Bool False -> return Nil
+		Bool True -> do 
+			e2<-evalStmt env stmt
+			case e2 of 
+				Break b -> return (Break b)
+				Return r -> return (Return r)
+				_ -> evalStmt env (WhileStmt exp stmt)
 
 evalStmt env (DoWhileStmt stmt expr) = do
     evaluatedExpr <- evalExpr env expr
@@ -289,6 +298,9 @@ infixOp env OpLOr  (Bool v1) (Bool v2) = return $ Bool $ v1 || v2
 infixOp env OpBXor  (Bool v1) (Bool v2) = return $ Bool $ xor v1 v2
 infixOp env OpLShift (Int v1) (Int v2) = return $ Int $ shiftL v1 v2
 infixOp env OpSpRShift  (Int v1) (Int v2) = return $ Int $ shiftR v1 v2
+infixOp env _ GlobalVar _ = error $"Variável não declarada na operação"
+infixOp env _ _ GlobalVar = error $"Variável não declarada na operação"
+infixOp env _ _ _ = error "Não é possível executar a operação"
 
 prefixOp :: StateT -> PrefixOp -> Value -> StateTransformer Value
 prefixOp env PrefixLNot (Bool v1) = return $ Bool $ not v1
@@ -324,13 +336,26 @@ tailOpExp env [] = return Nil
 tailOpExp env [x] = evalExpr env x
 tailOpExp env (x:xs) = evalExpr env (ListExpr xs)
 
-concatOp :: StateT ->[Value] ->[Expression] ->StateTransformer Value
+concatOp :: StateT -> [Value] -> [Expression] -> StateTransformer Value
 concatOp env l [] = return (List l)
 concatOp env l (param:params) = do 
 	evaluatedParam <- evalExpr env param
 	case evaluatedParam of
 		(List l2) -> concatOp env (l++l2) params
 		v-> concatOp env (l++[v]) params
+
+concatOpExp :: StateT -> [Expression] -> [Expression] -> StateTransformer Value
+concatOpExp env l [] = do
+	evaluatedOrigin <- evalExpr env (ArrayLit l)
+	case evaluatedOrigin of 
+		(List l1) -> concatOp env [evaluatedOrigin] []
+		_ -> error $"Não é um array"
+concatOpExp env l (param:params) = do
+	evaluatedOrigin <- evalExpr env (ArrayLit l)
+	evaluatedParam <- evalExpr env param
+	case evaluatedOrigin of 
+	     (List l1) -> concatOp env [evaluatedOrigin] (param:params)
+	     _ -> error $ "Não é um array"
 
 equalsOp :: StateT -> [Value] -> [Expression] -> StateTransformer Value
 equalsOp env l [] = return $ Bool True
@@ -339,6 +364,19 @@ equalsOp env l (param:params) = do
 	case evalParam of
 		(List l2) -> do
 			if (compareList l l2) then (equalsOp env l params) else return $ Bool False
+
+equalsOpExp:: StateT ->[Expression]->[Expression] ->StateTransformer Value
+equalsOpExp env l [] = return $Bool True
+equalsOpExp env (x:xs) (param:params) = do
+	evalX <- evalExpr env x
+	evalParam <- evalExpr env param
+	case evalX of
+		(List l1) -> do
+			case evalParam of
+				(List l2) -> do
+					if (compareList l1 l2) then (equalsOpExp env xs params) else return (Bool False)
+				_ -> return (Bool False)
+		_ -> return (Bool False)
 
 compareList :: [Value] -> [Value] -> Bool
 compareList [] [] = True

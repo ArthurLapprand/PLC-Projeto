@@ -6,15 +6,15 @@ data Value = Bool Bool
     | String String
     | Var String
     | Nil
-    | GlobalVar
-    | Double Double
-    | Break (Maybe Id)
-    | Function Id [Id] [Statement]
-    | Return Value
-    | List [Value]
-    | Empty
-  deriving (Eq)
-  
+	  | GlobalVar
+	  | Double Double
+	  | Break (Maybe Id)
+	  | Function Id [Id] [Statement]
+	  | Return Value
+	  | List [Value]
+	  | Empty
+	deriving (Eq)
+	
 
 --
 -- Pretty Printer
